@@ -15,6 +15,7 @@ public:
 	const size_t size = 1024;
 	custom_allocator();
 	void *mem_alloc(size_t size);
+	void *mem_realloc(void* addr, size_t size);
 	void mem_free(void *addr);
 	void mem_dump();
 };
@@ -65,7 +66,7 @@ void make_h(void *mem, ushort rem){
 }
 
 void *custom_allocator::mem_alloc(size_t size){
-	if(size >= this->size-3){
+	if(size >= this->size - h_size){
 		cout << endl << "Error: Memory allocation failed." << endl;
 		return NULL;
 	}
@@ -76,7 +77,7 @@ void *custom_allocator::mem_alloc(size_t size){
 	while(tmp < this->size){
 		isEmpty = (bool*)(memory + tmp);
 		b_size = (ushort*)(memory + tmp + 1);
-		if (*isEmpty && *b_size >= size + 3)
+		if (*isEmpty && *b_size >= size + h_size)
 		{
 			*isEmpty = false;
 			rem = *b_size - size;
@@ -91,6 +92,26 @@ void *custom_allocator::mem_alloc(size_t size){
 	return NULL;
 }
 
+
+void *custom_allocator::mem_realloc(void* addr, size_t size){
+	if(size >= this->size - h_size){
+		cout << endl << "Error: Memory reallocation failed." << endl;
+		return NULL;
+	}
+	char *ptr = (char*)this->mem_alloc(size);
+	ushort *b_size; 
+	if (ptr != NULL)
+	{
+		b_size = (ushort*)(addr - 2);
+		for(ushort i = 0; i <= size && i <= *b_size; i++){
+			*(ptr + i) = *((char*)(addr + i));
+		}
+		this->mem_free(addr);
+		return ptr;
+	}
+	cout << endl << "Error: Memory reallocation failed." << endl;
+	return NULL;
+}
 
 
 void custom_allocator::mem_free(void* addr){
@@ -107,6 +128,7 @@ int main(int argc, char const *argv[])
 	void *ptr2 = (ca.mem_alloc(2000));
 	int *ptr3 = (int*)ca.mem_alloc(sizeof(int));
 	ca.mem_dump();
+	ptr = (int*)ca.mem_realloc((void*)ptr, 13);
 	ca.mem_free((void*)ptr3);
 	ca.mem_dump();
 	return 0;
