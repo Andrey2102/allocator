@@ -15,6 +15,7 @@ public:
 	const size_t size = 1024;
 	custom_allocator();
 	void *mem_alloc(size_t size);
+	void mem_free(void *addr);
 	void mem_dump();
 };
 
@@ -44,6 +45,7 @@ void block_state(bool tmp, ushort size){
 
 
 void custom_allocator::mem_dump(){	
+	cout << endl << "Memory DUMP";
 	ushort tmp = 0;
 	bool* isEmpty;
 	ushort* b_size; 
@@ -64,7 +66,7 @@ void make_h(void *mem, ushort rem){
 
 void *custom_allocator::mem_alloc(size_t size){
 	if(size >= this->size-3){
-		cout << "Error: Memory allocation failed." << endl;
+		cout << endl << "Error: Memory allocation failed." << endl;
 		return NULL;
 	}
 	bool* isEmpty;
@@ -85,12 +87,16 @@ void *custom_allocator::mem_alloc(size_t size){
 		}
 		tmp = tmp + *b_size + h_size;
 	}
-	cout << "Error: Memory allocation failed." << endl;
+	cout << endl << "Error: Memory allocation failed." << endl;
 	return NULL;
 }
 
 
 
+void custom_allocator::mem_free(void* addr){
+	bool *isEmpty = (bool*)(addr - h_size);
+	*isEmpty = true;
+}
 
 
 int main(int argc, char const *argv[])
@@ -98,7 +104,10 @@ int main(int argc, char const *argv[])
 	custom_allocator ca;
 	ca.mem_dump();
 	int *ptr = (int*)ca.mem_alloc(sizeof(int));
-	int *ptr2 = (int*)ca.mem_alloc(sizeof(int));
+	void *ptr2 = (ca.mem_alloc(2000));
+	int *ptr3 = (int*)ca.mem_alloc(sizeof(int));
+	ca.mem_dump();
+	ca.mem_free((void*)ptr3);
 	ca.mem_dump();
 	return 0;
 }
