@@ -18,6 +18,7 @@ public:
 	void *mem_realloc(void* addr, size_t size);
 	void mem_free(void *addr);
 	void mem_dump();
+	void marge();
 };
 
 
@@ -46,7 +47,7 @@ void block_state(bool tmp, ushort size){
 
 
 void custom_allocator::mem_dump(){	
-	cout << endl << "Memory DUMP";
+	cout << endl << "			---Memory DUMP---";
 	ushort tmp = 0;
 	bool* isEmpty;
 	ushort* b_size; 
@@ -96,7 +97,7 @@ void *custom_allocator::mem_alloc(size_t size){
 void *custom_allocator::mem_realloc(void* addr, size_t size){
 	if(size >= this->size - h_size){
 		cout << endl << "Error: Memory reallocation failed." << endl;
-		return NULL;
+		return addr;
 	}
 	char *ptr = (char*)this->mem_alloc(size);
 	ushort *b_size; 
@@ -110,13 +111,37 @@ void *custom_allocator::mem_realloc(void* addr, size_t size){
 		return ptr;
 	}
 	cout << endl << "Error: Memory reallocation failed." << endl;
-	return NULL;
+	return addr;
 }
 
+void custom_allocator::marge(){
+	bool* isEmpty;
+	ushort* b_size;
+	bool* isEmpty_next;
+	ushort* b_size_next; 
+	ushort tmp = 0;
+	while(tmp < this->size){
+		isEmpty = (bool*)(memory + tmp);
+		b_size = (ushort*)(memory + tmp + 1);
+		if (tmp + *b_size + h_size == this->size)
+		{
+			break;
+		}
+		isEmpty_next = (bool*)(memory + tmp + h_size + *b_size);
+		b_size_next = (ushort*)(memory + tmp + h_size + *b_size + 1);
+		if (*isEmpty && *isEmpty_next)
+		{
+			*b_size = *b_size + h_size + *b_size_next;
+			tmp = 0;
+		}
+		tmp = tmp + *b_size + h_size;
+	}
+}
 
 void custom_allocator::mem_free(void* addr){
 	bool *isEmpty = (bool*)(addr - h_size);
 	*isEmpty = true;
+	this->marge();
 }
 
 
@@ -129,7 +154,6 @@ int main(int argc, char const *argv[])
 	int *ptr3 = (int*)ca.mem_alloc(sizeof(int));
 	ca.mem_dump();
 	ptr = (int*)ca.mem_realloc((void*)ptr, 13);
-	ca.mem_free((void*)ptr3);
 	ca.mem_dump();
 	return 0;
 }
